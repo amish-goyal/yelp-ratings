@@ -11,8 +11,8 @@ from pybrain.structure import FullConnection
 
 def convertDataNeuralNetwork(x, y):
 	data = SupervisedDataSet(x.shape[1], 1)
-	for d, v in zip(x, y):
-    	data.addSample(d, v)    
+	for xIns, yIns in zip(x, y):
+    	data.addSample(xIns, yIns)    
 	return data
 
 def NN(xTrain, yTrain, xTest, yTest):
