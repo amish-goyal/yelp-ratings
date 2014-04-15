@@ -12,14 +12,14 @@ def SVMReg(xTrain, yTrain, xTest, yTest, marginList):
 		yPred = svm.predict(xTest)
 		rms[margin] = sqrt(mean_squared_error(yTest, yPred))
 
-	(bestClassifier, rmse) = sorted(rms.iteritems(), key = operator.itemgetter(1))[0]
-	return bestClassifier, rmse
+	(bestPenalty, rmse) = sorted(rms.iteritems(), key = operator.itemgetter(1))[0]
+	return bestPenalty, rmse
 
 
 def main():
 	marginList = [10**x for x in xrange(-10,10,1)]
-	bestClassifier, rmse = SVMReg(xTrain, yTrain, xTest, yTest, marginList)
-	print bestClassifier, rmse
+	bestPenalty, rmse = SVMReg(xTrain, yTrain, xTest, yTest, marginList)
+	print bestPenalty, rmse
 
 if __name__=="__main__":
 	main()
