@@ -19,8 +19,8 @@ def LinRegRidge(xTrain, yTrain, xTest, yTest, alphaList):
 		yPred = reg.predict(xTest)
 		rms[alpha] = sqrt(mean_squared_error(yTest, yPred))
 
-	(bestClassifier, rmse) = sorted(rms.iteritems(), key = operator.itemgetter(1))[0]
-	return bestClassifier, rmse
+	(bestRegressor, rmse) = sorted(rms.iteritems(), key = operator.itemgetter(1))[0]
+	return bestRegressor, rmse
 
 def LinRegLasso(xTrain, yTrain, xTest, yTest, alphaList):
 	rms = dict()
@@ -30,8 +30,8 @@ def LinRegLasso(xTrain, yTrain, xTest, yTest, alphaList):
 		yPred = reg.predict(xTest)
 		rms[alpha] = sqrt(mean_squared_error(yTest, yPred))
 
-	(bestClassifier, rmse) = sorted(rms.iteritems(), key = operator.itemgetter(1))[0]
-	return bestClassifier, rmse
+	(bestRegressor, rmse) = sorted(rms.iteritems(), key = operator.itemgetter(1))[0]
+	return bestRegressor, rmse
 
 def main():
 
