@@ -1,5 +1,5 @@
 from sklearn import linear_model
-from sklearn import datasets
+#from sklearn import datasets
 import numpy as np
 
 def LinReg(xTrain, yTrain, xTest, yTest):
