@@ -7,7 +7,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from collections import defaultdict
 
 
-#bjson='yelp_academic_dataset_business.json'
+bjson='yelp_academic_dataset_business.json'
 rjson='yelp_academic_dataset_review.json'
 # This func reads the json file and yields one line of information at a time
 
@@ -80,22 +80,30 @@ def calc_imp_word_frequencies(generator):
             #raw_input('')
     return word_freq
 
-def main():
-    pass
+# This function filters out businesses related to food and dining and returns the imp business ids
+def filter_businesses(generator):
+    imp_ids=set()
+    for business in generator:
+        if len(set(business['categories']) & set(['Restaurants','Food']))>0:
+            imp_ids.add(business['business_id'])
+    return imp_ids
 
-def generate_corpus_file(generator):
-    with open('corpus.txt','w') as fil:
+def generate_review_corpus(imp_ids):
+    generator=jsonReader(rjson)
+    with open('corpus2.txt','w') as fil:
         for i,review in enumerate(generator):
             print i
             if i%100==0:
                 print review
-            if review['votes']['useful']>0:
+            if review['votes']['useful']>0 and review['business_id'] in imp_ids:
                 fil.write(select_relavant_words(review['text'].encode('utf-8')))
                 fil.write('\n')
 
 
-generator=jsonReader(rjson)
-#generate_corpus_file(generator)
+
+generator=jsonReader(bjson)
+imp_business_ids=filter_businesses(generator)
+generate_review_corpus(imp_business_ids)
 #word_freq=calc_imp_word_frequencies(generator)
 #tagged=create_linguistic_features(generator.next()['text'])
 #analyze_total_reviews(generator)
