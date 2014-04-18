@@ -11,6 +11,7 @@ import pickle
 bjson='yelp_academic_dataset_business.json'
 rjson='yelp_academic_dataset_review.json'
 Cfilename='corpus2.txt'
+pklfile='features.pkl'
 
 # This func reads the json file and yields one line of information at a time
 def jsonReader(jsonfile):
@@ -134,7 +135,7 @@ def get_business_features(imp_ids,fv,Rgenerator,x):
     except:
         return fv
     return fv
-
+"""
 vocab,corpus=getTop_n_words(100)
 x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
 Bgenerator=jsonReader(bjson)
@@ -145,7 +146,14 @@ Rgenerator=jsonReader(rjson)
 features=get_business_features(imp_business_ids,fv,Rgenerator,x)
 with open('features.pkl','w') as fil:
     pickle.dump(features,fil)
-       
+"""
+def return_train_test(pklfile,y):
+    fv=pickle.load(open(pklfile))
+    data=np.hstack((fv,np.array(y)[:,np.newaxis]))
+    xtrain,ytrain,xtest,ytest=split_dataset(data,.25)
+    return xtrain,ytrain,xtest,ytest
+
+xtrain,ytrain,xtest,ytest=return_train_test(pklfile,y)
 #generate_review_corpus(imp_business_ids,Rgenerator)
 #word_freq=calc_imp_word_frequencies(generator)
 #tagged=create_linguistic_features(generator.next()['text'])
