@@ -135,25 +135,26 @@ def get_business_features(imp_ids,fv,Rgenerator,x):
     except:
         return fv
     return fv
-"""
-vocab,corpus=getTop_n_words(100)
-x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
-Bgenerator=jsonReader(bjson)
-imp_business_ids,Bfeatures,y=filter_businesses(Bgenerator)
-rowsize=len(y)
-fv=np.zeros([rowsize,100])
-Rgenerator=jsonReader(rjson)
-features=get_business_features(imp_business_ids,fv,Rgenerator,x)
-with open('features.pkl','w') as fil:
-    pickle.dump(features,fil)
-"""
+def get_feature_pickle():
+    vocab,corpus=getTop_n_words(100)
+    x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
+    Bgenerator=jsonReader(bjson)
+    imp_business_ids,Bfeatures,y=filter_businesses(Bgenerator)
+    rowsize=len(y)
+    fv=np.zeros([rowsize,100])
+    Rgenerator=jsonReader(rjson)
+    features=get_business_features(imp_business_ids,fv,Rgenerator,x)
+    with open('features.pkl','w') as fil:
+        pickle.dump(features,fil)
+
 def return_train_test(pklfile,y):
     fv=pickle.load(open(pklfile))
     data=np.hstack((fv,np.array(y)[:,np.newaxis]))
     xtrain,ytrain,xtest,ytest=split_dataset(data,.25)
     return xtrain,ytrain,xtest,ytest
 
-xtrain,ytrain,xtest,ytest=return_train_test(pklfile,y)
+def main():
+    xtrain,ytrain,xtest,ytest=return_train_test(pklfile,y)
 #generate_review_corpus(imp_business_ids,Rgenerator)
 #word_freq=calc_imp_word_frequencies(generator)
 #tagged=create_linguistic_features(generator.next()['text'])
