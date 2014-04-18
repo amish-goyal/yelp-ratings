@@ -154,6 +154,8 @@ def return_train_test(pklfile,y):
     return xtrain,ytrain,xtest,ytest
 
 def main():
+    Bgenerator=jsonReader(bjson)
+    imp_business_ids,Bfeatures,y=filter_businesses(Bgenerator)
     xtrain,ytrain,xtest,ytest=return_train_test(pklfile,y)
 #generate_review_corpus(imp_business_ids,Rgenerator)
 #word_freq=calc_imp_word_frequencies(generator)
