@@ -5,12 +5,14 @@ import nltk
 import matplotlib.pyplot as plt 
 from sklearn.feature_extraction.text import CountVectorizer
 from collections import defaultdict
+import pickle
 
 
 bjson='yelp_academic_dataset_business.json'
 rjson='yelp_academic_dataset_review.json'
-# This func reads the json file and yields one line of information at a time
+Cfilename='corpus2.txt'
 
+# This func reads the json file and yields one line of information at a time
 def jsonReader(jsonfile):
     with open(jsonfile) as fil:
         #businesses=fil.read().split('\n')
@@ -65,8 +67,8 @@ def select_relavant_words(text):
             imp_words.append(word)
     return ' '.join(imp_words)
 
-def get_linguistic_feature_vector(corpus):
-    vectorizer = CountVectorizer(min_df=1)
+def get_linguistic_feature_vector(corpus,vocab):
+    vectorizer = CountVectorizer(min_df=1,vocabulary=vocab)
     X = vectorizer.fit_transform(corpus)
     return X,vectorizer
 
@@ -82,33 +84,75 @@ def calc_imp_word_frequencies(generator):
 
 # This function filters out businesses related to food and dining and returns the imp business ids
 def filter_businesses(generator):
-    imp_ids=set()
+    imp_ids=[]
+    Bfeatures=[]
+    y=[]
     for business in generator:
         if len(set(business['categories']) & set(['Restaurants','Food']))>0:
-            imp_ids.add(business['business_id'])
-    return imp_ids
+            imp_ids.append(business['business_id'])
+            """
+            try:
+                Bfeatures.append([business['Price Range'],business['Noise Level']])
+            except:
+                print business
+                raw_input('')
+            """
+            y.append(business['stars'])
+    return imp_ids,Bfeatures,y
 
-def generate_review_corpus(imp_ids):
-    generator=jsonReader(rjson)
+def generate_review_corpus(imp_ids,Rgenerator):
     with open('corpus2.txt','w') as fil:
-        for i,review in enumerate(generator):
+        for i,review in enumerate(Rgenerator):
             print i
-            if i%100==0:
+            if i==100:
                 print review
             if review['votes']['useful']>0 and review['business_id'] in imp_ids:
                 fil.write(select_relavant_words(review['text'].encode('utf-8')))
                 fil.write('\n')
 
+def getTop_n_words(n,Cfilename=Cfilename):
+    word_freq=defaultdict(int)
+    corpus=[]
+    with open(Cfilename) as fil:
+        for i,text in enumerate(fil):
+            corpus.append(text)
+            if i%1000==0:
+                print i
+            for word in text.rstrip().split(' '):
+                word_freq[word.lower()]+=1
+    return [a for a,b in sorted(word_freq.items(),key=lambda x: x[1],reverse=True)[:n]],corpus
 
+def get_business_features(imp_ids,fv,Rgenerator,x):
+    i=0
+    try:
+        for review in Rgenerator:
+            if review['votes']['useful']>0 and review['business_id'] in imp_ids:
+                idx=imp_ids.index(review['business_id'])
+                print i
+                fv[idx]+=x[i]
+                i+=1
+    except:
+        return fv
+    return fv
 
-generator=jsonReader(bjson)
-imp_business_ids=filter_businesses(generator)
-generate_review_corpus(imp_business_ids)
+vocab,corpus=getTop_n_words(100)
+x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
+Bgenerator=jsonReader(bjson)
+imp_business_ids,Bfeatures,y=filter_businesses(Bgenerator)
+rowsize=len(y)
+fv=np.zeros([rowsize,100])
+Rgenerator=jsonReader(rjson)
+features=get_business_features(imp_business_ids,fv,Rgenerator,x)
+with open('features.pkl','w') as fil:
+    pickle.dump(features,fil)
+       
+#generate_review_corpus(imp_business_ids,Rgenerator)
 #word_freq=calc_imp_word_frequencies(generator)
 #tagged=create_linguistic_features(generator.next()['text'])
 #analyze_total_reviews(generator)
 
 """
+'Price Range','Noise Level','stars'
 50749
 'Bagels','Bakeries','Barbeque','Bars','Beer', 'Wine & Spirits','Breakfast & Brunch','Buffets','Bubble Tea','Burgers','Cafes','Cafeteria','Chicken Wings','Cheesesteaks','Coffee & Tea','Comfort Food','Creperies','Cupcakes','Delis','Desserts','Dim Sum','Diners','Donuts','Ethnic Food','Fast Food','Fish & Chips','Food','Food Court','Food Trucks','Food Stands','Gelato','Gluten-Free','Halal','Ice Cream & Frozen Yogurt','Hot Dogs','Juice Bars & Smoothies','Live/Raw Food','Pizza','Pita','Pretzels','Restaurants','Salad','Sandwiches','Seafood','Soul Food','Soup','Steakhouses','Sushi Bars','Szechuan','Tapas Bars','Tapas/Small Plates','Tex-Mex','Vegan','Vegetarian','Wine Bars'
 'JJ','JJR','JJS','RB','RBR','RBS','UH'
