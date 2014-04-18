@@ -38,23 +38,22 @@ def analyze_total_reviews(generator):
 
 # This function splits the dataset into train and testsets
 def split_dataset(data,testpercent):
-    testsize=len(data)*testpercent
-
+    testsize=int(len(data)*testpercent)
     test_idx=random.sample(xrange(len(data)),testsize)
     xtest=np.zeros([testsize,data.shape[1]-1])
     ytest=np.zeros([testsize,1])
     for i in xrange(len(test_idx)):
-        xtest[i]=data[test_idx[i,:-1]]
-        ytest[i]=data[test_idx[i,-1]]
+        xtest[i]=data[test_idx[i]][:-1]
+        ytest[i]=data[test_idx[i]][-1]
 
-    trainsize=len(data)-size
+    trainsize=len(data)-testsize
 
     xtrain=np.zeros([trainsize,data.shape[1]-1])
     ytrain=np.zeros([trainsize,1])
     train_idx=list(set(xrange(len(data)))-set(test_idx))
     for i in xrange(len(train_idx)):
-        xtrain[i]=data[train_idx[i,:-1]]
-        ytrain[i]=data[train_idx[i,1]]
+        xtrain[i]=data[train_idx[i]][:-1]
+        ytrain[i]=data[train_idx[i]][-1]
     
     return xtrain,ytrain,xtest,ytest
 
@@ -161,7 +160,7 @@ def main():
 #word_freq=calc_imp_word_frequencies(generator)
 #tagged=create_linguistic_features(generator.next()['text'])
 #analyze_total_reviews(generator)
-
+main()
 """
 'Price Range','Noise Level','stars'
 50749
