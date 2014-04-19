@@ -38,10 +38,9 @@ def analyze_total_reviews(generator):
     plt.scatter(x,y)
     plt.show()
 
+
 # This function splits the dataset into train and testsets
-def split_dataset(data,testpercent):
-    testsize=int(len(data)*testpercent)
-    test_idx=random.sample(xrange(len(data)),testsize)
+def split_dataset(data,test_idx,testsize):
     xtest=np.zeros([testsize,data.shape[1]-1])
     ytest=np.zeros([testsize,1])
     for i in xrange(len(test_idx)):
@@ -148,10 +147,16 @@ def get_feature_pickle():
     with open('features.pkl','w') as fil:
         pickle.dump(features,fil)
 
-def return_train_test(y,fv):
+def return_train_test(y,fv,fvS):
     data=np.hstack((fv,np.array(y)[:,np.newaxis]))
-    xtrain,ytrain,xtest,ytest=split_dataset(data,.25)
-    return xtrain,ytrain,xtest,ytest
+    dataS=np.hstack((fvS,np.array(y)[:,np.newaxis]))
+
+    testsize=int(len(data)*0.25)
+    test_idx=random.sample(xrange(len(data)),testsize)
+
+    fourTupleNormalFeatures=split_dataset(data,test_idx,testsize)
+    fourTupleSentiFeatures=split_dataset(dataS,test_idx,testsize)
+    return fourTupleNormalFeatures,fourTupleSentiFeatures
 
  
 def main():
@@ -164,7 +169,7 @@ def main():
     senti_fv=process_sentiments(pklfile,sentipkl,100)
     print fv.shape
     print senti_fv.shape
-    return return_train_test(y,senti_fv)
+    return return_train_test(y,fv,senti_fv)
 
 def process_sentiments(pklfile,sentipkl,n):
     senti=pickle.load(open(sentipkl))
@@ -189,7 +194,7 @@ def process_sentiments(pklfile,sentipkl,n):
 #vocab,corpus=getTop_n_words(100)
 #x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
 ##fv=pickle.load(open(pklfile))
-xtrain,ytrain,xtest,ytest=main()
+fourTupleNormalFeatures,fourTupleSentiFeatures =main()
 
 #generate_review_corpus(imp_business_ids,Rgenerator)
 #word_freq=calc_imp_word_frequencies(generator)
