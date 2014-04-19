@@ -179,7 +179,7 @@ def process_sentiments(pklfile,sentipkl,n):
             wts[i]=senti[name+'#a']['posScore']
         else:
             wts[i]=0.2
-    print "wts"
+    print "wtss"
 
     fwts=np.tile(wts,(fv.shape[0],1))
     senti_fv=np.multiply(fv,fwts)
