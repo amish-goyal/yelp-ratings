@@ -12,6 +12,7 @@ bjson='yelp_academic_dataset_business.json'
 rjson='yelp_academic_dataset_review.json'
 Cfilename='corpus2.txt'
 pklfile='features.pkl'
+sentipkl='sentiWordNet.p'
 
 # This func reads the json file and yields one line of information at a time
 def jsonReader(jsonfile):
@@ -24,6 +25,7 @@ def jsonReader(jsonfile):
             except:
                 print "Reached end of file"
                 continue
+
 
 def analyze_total_reviews(generator):
     x=[]
@@ -146,21 +148,54 @@ def get_feature_pickle():
     with open('features.pkl','w') as fil:
         pickle.dump(features,fil)
 
-def return_train_test(pklfile,y):
-    fv=pickle.load(open(pklfile))
+def return_train_test(y,fv):
     data=np.hstack((fv,np.array(y)[:,np.newaxis]))
     xtrain,ytrain,xtest,ytest=split_dataset(data,.25)
     return xtrain,ytrain,xtest,ytest
 
+ 
 def main():
     Bgenerator=jsonReader(bjson)
     imp_business_ids,Bfeatures,y=filter_businesses(Bgenerator)
-    xtrain,ytrain,xtest,ytest=return_train_test(pklfile,y)
+
+    print "fv"
+    fv=pickle.load(open(pklfile))
+    print "sentifv"
+    senti_fv=process_sentiments(pklfile,sentipkl,100)
+    print fv.shape
+    print senti_fv.shape
+    return return_train_test(y,senti_fv)
+
+def process_sentiments(pklfile,sentipkl,n):
+    senti=pickle.load(open(sentipkl))
+    fv=pickle.load(open(pklfile))
+    vocab,corpus=getTop_n_words(n)
+    x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
+    names=vectorizer.get_feature_names()
+
+    wts=np.ones([n])
+    for i,name in enumerate(names):
+        if name+'#a' in senti.keys():
+            wts[i]=senti[name+'#a']['posScore']
+        else:
+            wts[i]=0.2
+    print "wts"
+
+    fwts=np.tile(wts,(fv.shape[0],1))
+    senti_fv=np.multiply(fv,fwts)
+    return senti_fv
+
+#Bgenerator=jsonReader(bjson)
+#vocab,corpus=getTop_n_words(100)
+#x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
+##fv=pickle.load(open(pklfile))
+xtrain,ytrain,xtest,ytest=main()
+
 #generate_review_corpus(imp_business_ids,Rgenerator)
 #word_freq=calc_imp_word_frequencies(generator)
 #tagged=create_linguistic_features(generator.next()['text'])
 #analyze_total_reviews(generator)
-main()
+#main()
 """
 'Price Range','Noise Level','stars'
 50749
