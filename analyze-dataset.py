@@ -3,7 +3,7 @@ import numpy as np
 import random
 import nltk
 import matplotlib.pyplot as plt 
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import CountVectorizer,TfidfVectorizer
 from collections import defaultdict
 import pickle
 
@@ -69,7 +69,8 @@ def select_relavant_words(text):
     return ' '.join(imp_words)
 
 def get_linguistic_feature_vector(corpus,vocab):
-    vectorizer = CountVectorizer(min_df=1,vocabulary=vocab)
+    #vectorizer = CountVectorizer(min_df=1,vocabulary=vocab)
+    vectorizer = TfidfVectorizer(min_df=1,vocabulary=vocab)
     X = vectorizer.fit_transform(corpus)
     return X,vectorizer
 
