@@ -87,10 +87,19 @@ def calc_imp_word_frequencies(generator):
 def filter_businesses(generator):
     imp_ids=[]
     Bfeatures=[]
+    check_feat=defaultdict(int)
+    fv=[]
     y=[]
+
     for business in generator:
         if len(set(business['categories']) & set(['Restaurants','Food']))>0:
             imp_ids.append(business['business_id'])
+            fv.append([])
+            for feat in ['Good For Groups','Good for Kids','Has TV','Outdoor Seating','Price Range']:
+                if feat in business['attributes'].keys():
+                    fv[-1].append(int(business['attributes'][feat]))
+                else:
+                    fv[-1].append(-1)
             """
             try:
                 Bfeatures.append([business['Price Range'],business['Noise Level']])
@@ -99,7 +108,7 @@ def filter_businesses(generator):
                 raw_input('')
             """
             y.append(business['stars'])
-    return imp_ids,Bfeatures,y
+    return imp_ids,Bfeatures,y,np.array(fv)
 
 def generate_review_corpus(imp_ids,Rgenerator):
     with open('corpus2.txt','w') as fil:
@@ -135,41 +144,46 @@ def get_business_features(imp_ids,fv,Rgenerator,x):
     except:
         return fv
     return fv
-def get_feature_pickle():
+def get_feature_pickle(addFeatures=False):
     vocab,corpus=getTop_n_words(100)
     x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
     Bgenerator=jsonReader(bjson)
-    imp_business_ids,Bfeatures,y=filter_businesses(Bgenerator)
+    imp_business_ids,Bfeatures,y,addFeat=filter_businesses(Bgenerator)
     rowsize=len(y)
     fv=np.zeros([rowsize,100])
     Rgenerator=jsonReader(rjson)
     features=get_business_features(imp_business_ids,fv,Rgenerator,x)
+    if addFeatures==True:
+        features=np.hstack((features,addFeat))
     with open('features.pkl','w') as fil:
         pickle.dump(features,fil)
 
-def return_train_test(y,fv,fvS):
+def return_train_test(y,fv,fvS,fvA):
     data=np.hstack((fv,np.array(y)[:,np.newaxis]))
     dataS=np.hstack((fvS,np.array(y)[:,np.newaxis]))
-
+    dataA=np.hstack((fvA,np.array(y)[:,np.newaxis]))
     testsize=int(len(data)*0.25)
     test_idx=random.sample(xrange(len(data)),testsize)
 
     fourTupleNormalFeatures=split_dataset(data,test_idx,testsize)
     fourTupleSentiFeatures=split_dataset(dataS,test_idx,testsize)
-    return fourTupleNormalFeatures,fourTupleSentiFeatures
+    fourTupleAddFeatures=split_dataset(dataA,test_idx,testsize)
+    return fourTupleNormalFeatures,fourTupleSentiFeatures,fourTupleAddFeatures
 
  
 def main():
     Bgenerator=jsonReader(bjson)
-    imp_business_ids,Bfeatures,y=filter_businesses(Bgenerator)
+    imp_business_ids,Bfeatures,y,addFeat=filter_businesses(Bgenerator)
 
     print "fv"
     fv=pickle.load(open(pklfile))
     print "sentifv"
     senti_fv=process_sentiments(pklfile,sentipkl,100)
+    print "Additional Features"
+    add_fv=np.hstack((fv,addFeat))
     print fv.shape
     print senti_fv.shape
-    return return_train_test(y,fv,senti_fv)
+    return return_train_test(y,fv,senti_fv,add_fv)
 
 def process_sentiments(pklfile,sentipkl,n):
     senti=pickle.load(open(sentipkl))
@@ -183,7 +197,7 @@ def process_sentiments(pklfile,sentipkl,n):
         if name+'#a' in senti.keys():
             wts[i]=senti[name+'#a']['posScore']
         else:
-            wts[i]=0.2
+            wts[i]=0.1
     print "wtss"
 
     fwts=np.tile(wts,(fv.shape[0],1))
@@ -191,10 +205,12 @@ def process_sentiments(pklfile,sentipkl,n):
     return senti_fv
 
 #Bgenerator=jsonReader(bjson)
+#Rgenerator=jsonReader(rjson)
+a,b,c=main()
 #vocab,corpus=getTop_n_words(100)
 #x,vectorizer=get_linguistic_feature_vector(corpus,vocab)
 ##fv=pickle.load(open(pklfile))
-fourTupleNormalFeatures,fourTupleSentiFeatures =main()
+#fourTupleNormalFeatures,fourTupleSentiFeatures =main()
 
 #generate_review_corpus(imp_business_ids,Rgenerator)
 #word_freq=calc_imp_word_frequencies(generator)
@@ -202,7 +218,7 @@ fourTupleNormalFeatures,fourTupleSentiFeatures =main()
 #analyze_total_reviews(generator)
 #main()
 """
-'Price Range','Noise Level','stars'
+'Good For Groups','Good for Kids','Has TV','Noise Level','Outdoor Seating','Price Range','Noise Level','stars'
 50749
 'Bagels','Bakeries','Barbeque','Bars','Beer', 'Wine & Spirits','Breakfast & Brunch','Buffets','Bubble Tea','Burgers','Cafes','Cafeteria','Chicken Wings','Cheesesteaks','Coffee & Tea','Comfort Food','Creperies','Cupcakes','Delis','Desserts','Dim Sum','Diners','Donuts','Ethnic Food','Fast Food','Fish & Chips','Food','Food Court','Food Trucks','Food Stands','Gelato','Gluten-Free','Halal','Ice Cream & Frozen Yogurt','Hot Dogs','Juice Bars & Smoothies','Live/Raw Food','Pizza','Pita','Pretzels','Restaurants','Salad','Sandwiches','Seafood','Soul Food','Soup','Steakhouses','Sushi Bars','Szechuan','Tapas Bars','Tapas/Small Plates','Tex-Mex','Vegan','Vegetarian','Wine Bars'
 'JJ','JJR','JJS','RB','RBR','RBS','UH'
